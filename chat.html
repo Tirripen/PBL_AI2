@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat AI - Mini PBL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* --- CSS KHUSUS HALAMAN CHAT --- */
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        
+        body {
+            background-color: #fcf8f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Agar tidak scroll body */
+        }
+
+        /* --- HEADER --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            background: transparent;
+            z-index: 10;
+        }
+
+        .menu-btn { font-size: 24px; cursor: pointer; color: #2d2d39; }
+        .brand-logo { display: flex; align-items: center; gap: 5px; font-weight: 700; color: #2d2d39; }
+        .logo-icon { font-size: 20px; }
+
+        /* --- SIDEBAR (HISTORY) --- */
+        .sidebar {
+            position: fixed;
+            top: 0; left: -280px; /* Sembunyi di kiri */
+            width: 280px;
+            height: 100%;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            transition: left 0.3s ease;
+            z-index: 20;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active { left: 0; } /* Munculkan sidebar */
+
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 30px; font-weight: 700; font-size: 18px;
+        }
+        
+        .close-btn { cursor: pointer; font-size: 20px; }
+
+        .history-list { list-style: none; overflow-y: auto; flex: 1; }
+        .history-item {
+            padding: 12px; margin-bottom: 10px;
+            background: #f4f4f4; border-radius: 10px;
+            cursor: pointer; font-size: 14px; color: #555;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .history-item:hover { background: #e0e0e0; }
+
+        /* --- MAIN CHAT AREA --- */
+        .chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto; /* Scroll jika chat panjang */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Tampilan Awal (Robot Besar) */
+        .welcome-screen {
+            text-align: center;
+            margin-top: 50px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .big-robot { width: 180px; margin-bottom: 20px; opacity: 0.9; }
+        .welcome-text { font-size: 14px; color: #888; max-width: 300px; }
+
+        /* Gelembung Chat (Simulasi Awan) */
+        .message-wrapper {
+            width: 100%; max-width: 600px;
+            display: flex; align-items: flex-end; gap: 10px;
+            margin-bottom: 20px;
+            display: none; /* Disembunyikan dulu, muncul lewat JS nanti */
+        }
+        .message-wrapper.show { display: flex; }
+
+        .message-wrapper.user { justify-content: flex-end; } /* User di kanan */
+        .message-wrapper.bot { justify-content: flex-start; } /* Bot di kiri */
+
+        .avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; border: 2px solid #2d2d39; }
+        .user .avatar { order: 2; } /* Icon user di paling kanan */
+        
+        .bubble {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 20px;
+            border: 2px solid #2d2d39;
+            font-size: 14px; color: #333;
+            max-width: 70%;
+            position: relative;
+            box-shadow: 2px 2px 0px #2d2d39; /* Efek kartun */
+        }
+
+        /* --- INPUT AREA --- */
+        .input-area {
+            padding: 20px;
+            background: #fcf8f5; /* Sama dengan background body */
+            display: flex; justify-content: center;
+        }
+
+        .input-box {
+            width: 100%; max-width: 600px;
+            background: white;
+            border: 2px solid #ccc;
+            border-radius: 50px;
+            padding: 10px 20px;
+            display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .input-box input {
+            flex: 1; border: none; outline: none; font-size: 15px;
+        }
+
+        .icon-btn { color: #888; cursor: pointer; font-size: 18px; transition: color 0.3s; }
+        .icon-btn:hover { color: #2d2d39; }
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Chat History</span>
+            <i class="fa-solid fa-xmark close-btn" onclick="toggleSidebar()"></i>
+        </div>
+        <ul class="history-list">
+            <li class="history-item"><i class="fa-regular fa-message"></i> Belajar HTML Dasar</li>
+            <li class="history-item"><i class="fa-regular fa-message"></i> Apa itu Cyber Security?</li>
+            <li class="history-item"><i class="fa-regular fa-message"></i> Cara install Linux</li>
+        </ul>
+        <button onclick="logout()" style="width:100%; padding:12px; background:#2d2d39; color:white; border:none; border-radius:10px; cursor:pointer;">Logout</button>
+    </div>
+
+    <header>
+        <i class="fa-solid fa-bars menu-btn" onclick="toggleSidebar()"></i>
+        <div class="brand-logo">
+            Mini <strong>PBL</strong> <i class="fa-solid fa-dragon logo-icon"></i>
+        </div>
+    </header>
+
+    <div class="chat-container" id="chatContainer">
+        
+        <div class="welcome-screen" id="welcomeScreen">
+            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" class="big-robot" alt="Robot AI">
+            <p class="welcome-text">Hi! I'm your AI Assistant. How can I help you today?</p>
+        </div>
+
+        <div class="message-wrapper user" id="dummyUserMsg">
+            <div class="bubble">Halo, apa itu Digital Forensics?</div>
+            <div class="avatar"><i class="fa-regular fa-user"></i></div>
+        </div>
+
+        <div class="message-wrapper bot" id="dummyBotMsg">
+            <div class="avatar"><i class="fa-solid fa-robot"></i></div>
+            <div class="bubble">Digital Forensics adalah cabang ilmu forensik yang berfokus pada pemulihan dan penyelidikan materi yang ditemukan dalam perangkat digital.</div>
+        </div>
+
+    </div>
+
+    <div class="input-area">
+        <div class="input-box">
+            <i class="fa-solid fa-magnifying-glass icon-btn"></i>
+            <input type="text" id="msgInput" placeholder="Ask me anything..." onkeypress="handleEnter(event)">
+            <i class="fa-solid fa-microphone icon-btn"></i>
+        </div>
+    </div>
+
+    <script>
+        // 1. Fungsi Toggle Sidebar
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        // 2. Fungsi Simulasi Chat
+        function handleEnter(e) {
+            if(e.key === 'Enter'){
+                const input = document.getElementById('msgInput');
+                if(input.value.trim() !== ""){
+                    // Sembunyikan robot besar jika ada chat
+                    document.getElementById('welcomeScreen').style.display = 'none';
+                    
+                    // Tampilkan dummy chat (Simulasi saja)
+                    document.getElementById('dummyUserMsg').classList.add('show');
+                    setTimeout(() => {
+                        document.getElementById('dummyBotMsg').classList.add('show');
+                    }, 1000); // Bot balas setelah 1 detik
+
+                    input.value = ''; // Kosongkan input
+                }
+            }
+        }
+
+        // 3. Fungsi Logout
+        function logout() {
+            // Hapus sesi login
+            localStorage.removeItem('isRemembered'); // (Opsional, tergantung kebijakan "Remember Me" kamu)
+            window.location.href = 'index.html'; // Balik ke halaman login
+        }
+    </script>
+</body>
+</html>
