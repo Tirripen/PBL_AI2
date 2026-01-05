@@ -299,7 +299,6 @@ input[type="password"]::-webkit-password-reveal-button {
         // Script untuk Toggle Password (Show/Hide)
 document.querySelectorAll('.toggle-password').forEach(icon => {
     icon.addEventListener('click', function () {
-        // Cari input yang satu grup dengan ikon ini
         const input = this.parentElement.querySelector('input');
         
         // Cek tipe saat ini, lalu ubah
@@ -329,7 +328,6 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // 2. Modifikasi Fungsi Login (Contoh Sederhana)
-// Cari tag <form> login kamu, dan pastikan onsubmit-nya memanggil fungsi ini
 function handleLogin(event) {
     event.preventDefault(); // Mencegah reload halaman
     
@@ -352,4 +350,5 @@ function handleLogin(event) {
     </script>
     
 </body>
+
 </html>
